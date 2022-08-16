@@ -1,0 +1,23 @@
+git+https://github.com/LeonardoAlchieri/pandas.git@attrs_in_parquet_metadata
+git+https://github.com/LeonardoAlchieri/cvxEDA.git
+git+https://github.com/LeonardoAlchieri/affect-size.git
+# Leonardo's branch, with to_perquet modifications -> still not accepted by main pandas
+pre-commit
+pyarrow # alternatively, fastparquet
+numba
+numpy
+scipy
+matplotlib
+seaborn
+plotly
+kaleido # for saving plotly figures. [optional]
+tqdm
+black # [optional]
+scikit-learn
+tslearn
+h5py
+statsmodels
+openpyxl
+pandarallel
+dataframe_image # for exporting dataframes as images in notebooks
+neurokit2
