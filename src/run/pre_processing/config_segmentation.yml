@@ -1,0 +1,4 @@
+path_to_data: "./data.nosync/all_data_minmax_norm.parquet"
+path_to_save_folder: "./data.nosync"
+save_format: 'parquet'
+path_to_laughter_info: "./data.nosync/USI_Laughs/laughter_episodes_annotations.xlsx"

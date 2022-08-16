@@ -1,3 +1,10 @@
+#
+data.nosync/
+*.nosync/
+.DS_Store
+.vscode/
+logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

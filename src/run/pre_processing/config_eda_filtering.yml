@@ -1,0 +1,7 @@
+path_to_data: "./data.nosync/all_data.parquet"
+path_to_save_folder: "./data.nosync"
+save_format: 'parquet'
+cutoff_frequency: 0.4 # should not be changed, used like this by Elena
+butterworth_order: 1 # should not be changed, used like this by Elena
+plots: True
+clean_plots: True

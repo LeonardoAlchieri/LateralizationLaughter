@@ -1,0 +1,4 @@
+# NOTE: all folder paths w/o the "/" at the end
+path_to_data: "./data.nosync/all_experimento_info.parquet"
+path_to_save_folder: "./data.nosync"
+save_format: 'parquet'
