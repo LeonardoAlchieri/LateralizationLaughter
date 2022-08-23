@@ -2,3 +2,19 @@ path_to_experiment_info: "../ContinuousLaugh/data.nosync/all_experimento_info_co
 path_to_laughter_info: "../ContinuousLaugh/data.nosync/USI_Laughs/laughter_episodes_annotations.xlsx"
 path_to_preprocessed_data: "../ContinuousLaugh/data.nosync/all_data_minmax_norm.parquet"
 drop_nan_feature: True
+subset_features_plot:
+  BVP:
+    - 'min'
+    - 'max'
+    - 'mean'
+    - 'std'
+    - 'slope'
+    - 'hr mean'
+    - 'auc'
+  EDA:
+    - 'min'
+    - 'max'
+    - 'mean'
+    - 'std'
+    - 'slope'
+    - 'number of peaks'

@@ -1,4 +1,5 @@
 from numpy import datetime64, array, asarray, ndarray, mean
+from numpy import isnan, nan, sign
 from typing import Callable, Any
 from time import time
 from functools import wraps
@@ -6,7 +7,6 @@ from logging import getLogger
 from sys import __stdout__
 import sys
 from os import devnull
-
 from pandas import (
     DataFrame,
     Index,
@@ -258,3 +258,57 @@ def calculate_mean_difference(x: DataFrame, use_abs: bool = False) -> ndarray:
         diff: ndarray = data1 - data2  # Difference between data1 and data2
     md = mean(diff)
     return md
+
+
+def get_cliff_bin(
+    x: Series, dull: list[str] | None = None, raise_nan: bool = False
+) -> str:
+    """Method to get bins for the cliff delta values. They are considered
+    with sign, and follow the suggestions by Vargha and Delaney (2000))
+
+    Parameters
+    ----------
+    x : Series
+        cliff delta data to bin over
+    dull : list[str] | None, optional
+        bins over which to separate; if None, the default by Vargha and
+        Delaney (2020) will be used, by default None
+    raise_nan : bool, optional
+        if True, the method will fail if a Cliff delta is nan, by default False
+
+    Returns
+    -------
+    str
+        returns the description of the bin
+
+    Raises
+    ------
+    ValueError
+        if raise_nan is True and a Cliff delta is nan
+    ValueError
+        if the value does not check any dull list controls, but is also not nun
+    """
+    x_sign = sign(x)
+    x = abs(x)
+    if dull is None:
+        dull: dict[str, str] = {
+            "small": 0.11,
+            "medium": 0.28,
+            "large": 0.43,
+        }  # effect sizes from (Vargha and Delaney (2000)) "negligible" for the rest=
+    if x < dull["small"]:
+        return 0 * x_sign
+    elif dull["small"] <= x < dull["medium"]:
+        return 1 * x_sign
+    elif dull["medium"] <= x < dull["large"]:
+        return 2 * x_sign
+    elif x >= dull["large"]:
+        return 3 * x_sign
+    else:
+        if isnan(x):
+            if raise_nan:
+                raise ValueError("NaN value")
+            else:
+                return nan
+        else:
+            raise ValueError(f"{x} is not in the dull range")

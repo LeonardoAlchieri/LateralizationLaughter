@@ -21,10 +21,11 @@ from random import seed as set_seed
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from src.utils.io import load_config
-from src.utils import slice_user_over_experiment_time
+from src.utils import slice_user_over_experiment_time, get_cliff_bin
 from src.utils.correlation import calculate_statistical_test
-from src.utils.plots import statistical_test_plot
+from src.utils.plots import statistical_test_plot, cliff_delta_plot
 from src.utils.feature_extraction import get_signal_feature_extraction, extract_features
+from src.utils.correlation import calculate_cliff_delta
 
 # NOTE: fixed seed
 pandarallel.initialize(progress_bar=True)
@@ -149,12 +150,80 @@ def add_laughter_to_experiment_info(
     return experimento_info_w_laugh, sessions_groupings_w_laugh
 
 
+def perform_cliff_delta(
+    signal_features: DataFrame,
+    signal_name: str,
+    make_plot: bool = True,
+    subset_features_plot: dict[str, list[str]] | dict[None] = dict(),
+) -> DataFrame:
+    """Method to perform cliff delta effect sixze between the left and right side
+    feature extracted for a specific signal
+
+    Parameters
+    ----------
+    signal_features : DataFrame
+        dataframe with extracted features
+    signal_name : str
+        name of the signal, used for plotting purposes
+    make_plot : bool, optional
+        if True, a heatmap with the results will be made, by default True
+    subset_features_plot : dict[str, list[str]], optional
+        if not empty, a dictionary with the subset of columns to be plotted,
+        by default dict()
+
+    Returns
+    -------
+    DataFrame
+        returns the dataframe with the calculated cliff delta values
+    """
+    cliff_delta_results = signal_features.groupby(level=[0, 3], axis=0).apply(
+        calculate_cliff_delta
+    )
+    cliff_delta_results_vals = cliff_delta_results.iloc[:, 0].unstack(level=1)
+    cliff_delta_bins = cliff_delta_results_vals.applymap(get_cliff_bin)
+    signal_name_short = signal_name[:3]
+    if subset_features_plot.get(signal_name_short, None) is not None:
+        logger.info(
+            f"Subsetting features for plotting: {subset_features_plot[signal_name_short]}"
+        )
+        cliff_delta_bins = cliff_delta_bins[subset_features_plot[signal_name_short]]
+        cliff_delta_results_vals = cliff_delta_results_vals[
+            subset_features_plot[signal_name_short]
+        ]
+    if make_plot:
+        cliff_delta_plot(
+            cliff_delta_bins=cliff_delta_bins,
+            cliff_delta_results_vals=cliff_delta_results_vals,
+            signal_name=signal_name,
+        )
+    return cliff_delta_results_vals
+
+
 def perform_statistical_test(
     signal_features: DataFrame,
     signal_name: str,
     p_val_threshold: float = 0.05,
     make_plot: bool = True,
 ) -> DataFrame:
+    """Method to perform statistical test between the left and right side
+    feature extracted for a specific signal
+
+    Parameters
+    ----------
+    signal_features : DataFrame
+        dataframe with extracted features1
+    signal_name : str
+        name of the signal, used for plotting purposes
+    p_val_threshold : float, optional
+        threshold for the p value, by default 0.05
+    make_plot : bool, optional
+        if True, a heatmap with the results will be made, by default True
+
+    Returns
+    -------
+    DataFrame
+        the method returns the dataframe with the results of the statistical test
+    """
     test_results = signal_features.groupby(level=[0, 3], axis=0).apply(
         calculate_statistical_test
     )
@@ -182,6 +251,7 @@ def main(seed: int = 0):
     path_to_laughter_info: str = configs["path_to_laughter_info"]
     path_to_preprocessed_data: str = configs["path_to_preprocessed_data"]
     drop_nan_feature: bool = configs["drop_nan_feature"]
+    subset_features_plot: dict[str, list[str]] = configs["subset_features_plot"]
 
     experiment_info: DataFrame = read_parquet(path_to_experiment_info)
     laughter_info_data: DataFrame = read_excel(
@@ -234,6 +304,12 @@ def main(seed: int = 0):
 
         perform_statistical_test(
             signal_features=signal_features, signal_name=signal_to_analyse
+        )
+
+        perform_cliff_delta(
+            signal_features=signal_features,
+            signal_name=signal_to_analyse,
+            subset_features_plot=subset_features_plot,
         )
 
 

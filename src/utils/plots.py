@@ -1,5 +1,5 @@
 from itertools import cycle
-from numpy import ndarray, asarray, mean, std
+from numpy import ndarray, asarray, mean, std, unique
 from os.path import join as join_paths
 from pandas import DataFrame, Series
 from matplotlib.pyplot import (
@@ -129,6 +129,7 @@ def statistical_test_plot(
     test_name: str = "Wilcoxon",
     threshold: float = 0.05,
 ) -> None:
+    set(font_scale=1.8)
     df_to_save = test_results.iloc[:, 2].unstack(level=1)
     cmap = cm.coolwarm
     figure(figsize=(24, 5))
@@ -148,7 +149,6 @@ def statistical_test_plot(
     xlabel("Feature")
     ylabel("Event")
     title(f"P values of {test_name} test for {signal_name} features")
-    set(font_scale=1.8)
     custom_handles = [
         Patch(facecolor=cmap(0.0), edgecolor=cmap(0.0), label="Non Significant"),
         Patch(facecolor=cmap(1.0), edgecolor=cmap(1.0), label="Significant"),
@@ -160,5 +160,91 @@ def statistical_test_plot(
     )
     savefig(
         join_paths(path_to_save, f"{test_name}_statistical_heatmap_{signal_name}.pdf"),
+        bbox_inches="tight",
+    )
+
+
+def cliff_delta_plot(
+    cliff_delta_bins: DataFrame,
+    cliff_delta_results_vals: DataFrame,
+    signal_name: str,
+    path_to_save: str = "./visualizations/",
+) -> None:
+    cmap = cm.coolwarm
+    set(font_scale=1.8)
+    figure(figsize=(13, 9))
+    ax = heatmap(
+        cliff_delta_bins,
+        xticklabels=cliff_delta_results_vals.columns,
+        vmax=3,
+        vmin=-3,
+        center=0,
+        annot=cliff_delta_results_vals.round(decimals=3),
+        cmap=cmap,
+        fmt="",
+        cbar=False,
+        yticklabels=cliff_delta_results_vals.index,
+    )
+    ax.tick_params(left=True, bottom=True)
+    xticks(rotation=30, ha="right")
+    xlabel("Feature")
+    ylabel("Event")
+    title(f"Cliff Delta values ({signal_name})", fontsize=40)
+
+    def make_custom_handles(bins: DataFrame, cmap) -> list[Patch]:
+        labels: list[Patch] = list()
+        for el in unique(bins.values):
+            if el == 0:
+                labels.append(
+                    Patch(facecolor=cmap(0.5), edgecolor=cmap(0.5), label="negligible")
+                )
+            elif el == 1:
+                labels.append(
+                    Patch(
+                        facecolor=cmap(0.6), edgecolor=cmap(0.6), label="small (left)"
+                    )
+                )
+            elif el == 2:
+                labels.append(
+                    Patch(
+                        facecolor=cmap(0.8), edgecolor=cmap(0.8), label="medium (left)"
+                    )
+                )
+            elif el == 3:
+                # NOTE: use 1. and not 1, otherwise something goes wronf with cmap
+                labels.append(
+                    Patch(
+                        facecolor=cmap(1.0), edgecolor=cmap(1.0), label="large (left)"
+                    )
+                )
+            elif el == -1:
+                labels.append(
+                    Patch(
+                        facecolor=cmap(0.4), edgecolor=cmap(0.4), label="small (right)"
+                    )
+                )
+            elif el == -2:
+                labels.append(
+                    Patch(
+                        facecolor=cmap(0.2), edgecolor=cmap(0.2), label="medium (right)"
+                    )
+                )
+            elif el == -3:
+                labels.append(
+                    Patch(
+                        facecolor=cmap(0.0), edgecolor=cmap(0.0), label="large (right)"
+                    )
+                )
+
+        return labels
+
+    custom_handles = make_custom_handles(bins=cliff_delta_bins, cmap=cmap)
+    legend(
+        handles=custom_handles,
+        bbox_to_anchor=(1.4, 1.05),
+        title="Cliff Delta effect (dominant side)",
+    )
+    savefig(
+        join_paths(path_to_save, f"cliff_delta_{signal_name}.pdf"),
         bbox_inches="tight",
     )
