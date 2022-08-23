@@ -6,7 +6,7 @@ from scipy.stats import linregress
 logger = getLogger(__name__)
 
 
-def get_acc_features(data: ndarray) -> ndarray:
+def get_acc_features(data: ndarray, **kwargs) -> ndarray:
     """This method performs the feature extraction for an ACC signal.
     The features extracted are: minimum, maximum, mean, standard deviation, dynamic change,
     slope, absolute value of the slope, mean and standard deviation of the first and

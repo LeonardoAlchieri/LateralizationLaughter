@@ -4,6 +4,7 @@ data.nosync/
 .DS_Store
 .vscode/
 logs/
+visualizations/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

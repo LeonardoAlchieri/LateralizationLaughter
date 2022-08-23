@@ -1,5 +1,6 @@
 from itertools import cycle
 from numpy import ndarray, asarray, mean, std
+from os.path import join as join_paths
 from pandas import DataFrame, Series
 from matplotlib.pyplot import (
     figure,
@@ -12,6 +13,9 @@ from matplotlib.pyplot import (
     legend as make_legend,
 )
 from matplotlib.axes._subplots import SubplotBase
+from matplotlib.pyplot import xticks, xlabel, ylabel, legend, cm, show, title
+from matplotlib.patches import Patch
+from seaborn import set, heatmap
 
 
 def bland_altman_plot(
@@ -116,3 +120,45 @@ def make_lineplot(
                 raise NotImplementedError(
                     f'Unknown plot type "{which}". Currently implemented: "EDA"'
                 )
+
+
+def statistical_test_plot(
+    test_results: DataFrame,
+    signal_name: str,
+    path_to_save: str = "./visualizations/",
+    test_name: str = "Wilcoxon",
+    threshold: float = 0.05,
+) -> None:
+    df_to_save = test_results.iloc[:, 2].unstack(level=1)
+    cmap = cm.coolwarm
+    figure(figsize=(24, 5))
+    heatmap(
+        df_to_save,
+        xticklabels=df_to_save.columns,
+        # vmax=0.2, vmin=-.2, center=0,
+        # annot=df_to_save.replace({True: 'Significant', False: 'Non Significant'}, inplace=False).values,
+        annot=test_results.iloc[:, 1].round(decimals=3).unstack(level=1).values,
+        cmap=cmap,
+        fmt="",
+        cbar=False,
+        yticklabels=df_to_save.index,
+    )
+
+    xticks(rotation=30, ha="right")
+    xlabel("Feature")
+    ylabel("Event")
+    title(f"P values of {test_name} test for {signal_name} features")
+    set(font_scale=1.8)
+    custom_handles = [
+        Patch(facecolor=cmap(0.0), edgecolor=cmap(0.0), label="Non Significant"),
+        Patch(facecolor=cmap(1.0), edgecolor=cmap(1.0), label="Significant"),
+    ]
+    legend(
+        handles=custom_handles,
+        bbox_to_anchor=(1.253, 1.05),
+        title=f"P value significance ({threshold} threshold)",
+    )
+    savefig(
+        join_paths(path_to_save, f"{test_name}_statistical_heatmap_{signal_name}.pdf"),
+        bbox_inches="tight",
+    )

@@ -124,8 +124,9 @@ def calculate_cliff_delta(x: DataFrame, alpha: float = 0.05) -> Series:
     return cliff_delta_res
 
 
-
-def get_cliff_bin(x: Series, dull: list[str] | None = None, raise_nan: bool = False) -> int:
+def get_cliff_bin(
+    x: Series, dull: list[str] | None = None, raise_nan: bool = False
+) -> int:
     """Simple method to get the cliff bin of a given series. The bin is given as a number between 0 and 3.
 
     Parameters
@@ -133,7 +134,7 @@ def get_cliff_bin(x: Series, dull: list[str] | None = None, raise_nan: bool = Fa
     x : Series
         the input value to be binned
     dull : list[str] | None, optional
-        a disctionary containing the bins, by default None. If None, the default bins are used, 
+        a disctionary containing the bins, by default None. If None, the default bins are used,
         as proposed b Vargha and Delaney (2000)
     raise_nan : bool, optional
         if True, when a NaN is found, a ValueError is raised, by default False
@@ -150,19 +151,23 @@ def get_cliff_bin(x: Series, dull: list[str] | None = None, raise_nan: bool = Fa
     ValueError
         is some value other than Nan or float is found, a ValueError is raised.
     """
-    
+
     x_sign: int = sign(x)
     x: Series = abs(x)
     if dull is None:
-        dull: dict[str, str] = {'small': 0.11, 'medium': 0.28, 'large': 0.43} # effect sizes from (Vargha and Delaney (2000)) "negligible" for the rest=
-    if x < dull['small']:
-        return 0*x_sign
-    elif dull['small'] <= x < dull['medium']:
-        return 1*x_sign
-    elif dull['medium'] <= x < dull['large']:
-        return 2*x_sign
-    elif x >= dull['large']:
-        return 3*x_sign
+        dull: dict[str, str] = {
+            "small": 0.11,
+            "medium": 0.28,
+            "large": 0.43,
+        }  # effect sizes from (Vargha and Delaney (2000)) "negligible" for the rest=
+    if x < dull["small"]:
+        return 0 * x_sign
+    elif dull["small"] <= x < dull["medium"]:
+        return 1 * x_sign
+    elif dull["medium"] <= x < dull["large"]:
+        return 2 * x_sign
+    elif x >= dull["large"]:
+        return 3 * x_sign
     else:
         if isnan(x):
             if raise_nan:
@@ -171,4 +176,3 @@ def get_cliff_bin(x: Series, dull: list[str] | None = None, raise_nan: bool = Fa
                 return nan
         else:
             raise ValueError(f"{x} is not in the dull range")
-    

@@ -1,4 +1,4 @@
-from numpy import datetime64
+from numpy import datetime64, array, asarray, ndarray, mean
 from typing import Callable, Any
 from time import time
 from functools import wraps
@@ -16,6 +16,7 @@ from pandas import (
     MultiIndex,
     date_range,
     to_datetime,
+    Series,
 )
 
 logger = getLogger("utils")
@@ -205,3 +206,55 @@ def prepare_experiment_times(
         times_to_slice_over_experiment.index.droplevel(1)
     )
     return times_to_slice_over_experiment
+
+
+def change_orientation(x: DataFrame) -> DataFrame:
+    """Simple method to change orientation of a dataframe with a
+    multi-level index.
+
+    Parameters
+    ----------
+    x : DataFrame
+        dataframe to change orientation of; required to have a "left" and "right" column
+
+    Returns
+    -------
+    DataFrame
+        dataframe with columns as index and vice versa
+    """
+    users = x.index.get_level_values(1).unique()
+    event = x.index.get_level_values(0).unique()
+    x = array(x)
+    x = DataFrame(x, index=users, columns=event).T
+    return x
+
+
+def calculate_mean_difference(x: DataFrame, use_abs: bool = False) -> ndarray:
+    """Simple method to evaluate the mean of the differences between the left
+    and right side for a given dataframe.
+
+    Parameters
+    ----------
+    x : DataFrame
+        dataframe over which to evaluate the difference; required to have
+        a "left" and "right" column
+    use_abs : bool, optional
+        if True, the differences will be considered absolute, otherwise signed, by default False
+
+    Returns
+    -------
+    ndarray
+        returns the array of the the differences
+    """
+    data1: Series = x.loc[:, "left"]
+    data2: Series = x.loc[:, "right"]
+    data1: ndarray = asarray(data1)
+    data2: ndarray = asarray(data2)
+    if use_abs:
+        diff: ndarray = abs(
+            data1 - data2
+        )  # Absolute Difference between data1 and data2
+    else:
+        diff: ndarray = data1 - data2  # Difference between data1 and data2
+    md = mean(diff)
+    return md
