@@ -24,5 +24,20 @@ We suggest to use this, since other configurations would require to change a lit
 
 ## Statistical Analysis
 
+To run the statistical analysis, and replicate the plots shown in the paper, you can just do:
+    ```bash
+        python src/run/statistical_analysis/run_statistical_feature.py
+    ```
+The script will use a configuration file (`src/run/statistical_analysis/config_statistical_feature.yml`), which by default has the same values used by us. I would suggest to only change the path to the data.
+
+*WARNING*: the script will fail if it cannot find a `logs` folder and a `visualizations` folder in the root of the repo. While I plan to automate this easily, for the moment please just create them.
+
+## Machine Learning Task
+
+
+
+
+@2022, Leonardo Alchieri, Nouran Abdalazim, Lidia Alecci, Shkurta Gashi, Elena Di Lascio, Silvia Santini
+Contact: leonardo.alchieri@usi.ch
 
 
