@@ -5,6 +5,7 @@ data.nosync/
 .vscode/
 logs/
 visualizations/
+results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

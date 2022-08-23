@@ -38,6 +38,7 @@ The script will use a configuration file (`src/run/statistical_analysis/config_s
 
 
 @2022, Leonardo Alchieri, Nouran Abdalazim, Lidia Alecci, Shkurta Gashi, Elena Di Lascio, Silvia Santini
+ 
 Contact: leonardo.alchieri@usi.ch
 
 

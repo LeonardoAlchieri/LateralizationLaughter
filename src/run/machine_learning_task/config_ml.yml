@@ -1,0 +1,5 @@
+path_to_experiment_info: "../ContinuousLaugh/data.nosync/all_experimento_info_corrected.parquet"
+path_to_laughter_info: "../ContinuousLaugh/data.nosync/USI_Laughs/laughter_episodes_annotations.xlsx"
+path_to_preprocessed_data: "../ContinuousLaugh/data.nosync/all_data_minmax_norm.parquet"
+event_of_interest: "laughter"
+baseline_event: "baseline_2"

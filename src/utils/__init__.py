@@ -21,6 +21,26 @@ from pandas import (
 
 logger = getLogger("utils")
 
+# TODO: define this with a json somewhere
+SESSIONS_GROUPINGS: dict[str, list[str]] = {
+    "baseline": ["baseline_1", "baseline_2", "baseline_3", "baseline_4", "baseline_5"],
+    "cognitive_load": ["cognitive_load"],
+    "fake_laughter": ["fake"],
+    "clapping_hands": ["clapping_hands"],
+    "funny_videos": [
+        "baby",
+        "people_car",
+        "stand_up_comedy",
+        "himym",
+        "cat",
+        "penguins",
+        "man",
+        "bbt",
+        "people_falling",
+    ],
+}
+
+INTENSITIES_MAPPING: dict[str, float] = {"low": 0, "medium": 1, "high": 2}
 
 # decorater used to block function printing to the console
 def blockPrinting(func):

@@ -1,31 +1,25 @@
 from sys import path
-from typing import Callable
 
 path.append("./")
 
 from pandas import (
     DataFrame,
-    Series,
     read_parquet,
     read_excel,
-    MultiIndex,
-    to_datetime,
-    concat,
     IndexSlice,
 )
-from copy import deepcopy
 from pandarallel import pandarallel
 from numpy.random import seed as set_np_seed
-from numpy import array, asarray, ndarray, mean, nan
 from random import seed as set_seed
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, basicConfig, getLogger
 from src.utils.io import load_config
-from src.utils import slice_user_over_experiment_time, get_cliff_bin
+from src.utils import get_cliff_bin
 from src.utils.correlation import calculate_statistical_test
 from src.utils.plots import statistical_test_plot, cliff_delta_plot
 from src.utils.feature_extraction import get_signal_feature_extraction, extract_features
 from src.utils.correlation import calculate_cliff_delta
+from src.utils.experiment_info import add_laughter_to_experiment_info, add_events_to_signal_data
 
 # NOTE: fixed seed
 pandarallel.initialize(progress_bar=True)
@@ -33,121 +27,6 @@ pandarallel.initialize(progress_bar=True)
 _filename: str = basename(__file__).split(".")[0][4:]
 basicConfig(filename=f"logs/run/statistical_analysis/{_filename}.log", level=INFO)
 logger = getLogger(_filename)
-
-# TODO: define this with a json somewhere
-SESSIONS_GROUPINGS: dict[str, list[str]] = {
-    "baseline": ["baseline_1", "baseline_2", "baseline_3", "baseline_4", "baseline_5"],
-    "cognitive_load": ["cognitive_load"],
-    "fake_laughter": ["fake"],
-    "clapping_hands": ["clapping_hands"],
-    "funny_videos": [
-        "baby",
-        "people_car",
-        "stand_up_comedy",
-        "himym",
-        "cat",
-        "penguins",
-        "man",
-        "bbt",
-        "people_falling",
-    ],
-}
-
-INTENSITIES_MAPPING: dict[str, float] = {"low": 0, "medium": 1, "high": 2}
-
-
-def add_events_to_signal_data(
-    signal_data: DataFrame,
-    experiment_info: DataFrame,
-    experimento_info_w_laugh: DataFrame,
-    sessions_groupings_w_laugh: list[str],
-) -> DataFrame:
-    signal_data = signal_data.groupby(level=0, axis=0, group_keys=False).apply(
-        slice_user_over_experiment_time,
-        experimento_info=experiment_info,
-        slicing_col="experiment",
-    )
-    signal_data.columns = signal_data.columns.droplevel(1)
-    # TODO: add parallel computation here
-    different_groupings_signal_data_w_laugh: dict[str, DataFrame] = concat(
-        [
-            signal_data.groupby(level=0, axis=0, group_keys=False).apply(
-                slice_user_over_experiment_time,
-                experimento_info=experimento_info_w_laugh,
-                slicing_col=session,
-            )
-            for session_group in sessions_groupings_w_laugh.values()
-            for session in session_group
-        ],
-        keys=[
-            f"{group_name}%{event}"
-            for group_name, group_item in sessions_groupings_w_laugh.items()
-            for event in group_item
-        ],
-        names=["grouping"],
-    )
-    different_groupings_signal_data_w_laugh.index = MultiIndex.from_tuples(
-        [
-            (el[0].split("%")[0], el[0].split("%")[1], el[1], el[2])
-            for el in different_groupings_signal_data_w_laugh.index
-        ],
-        names=["group", "event", "user", "timestamp"],
-    )
-
-    return different_groupings_signal_data_w_laugh
-
-
-def add_laughter_to_experiment_info(
-    laughter_info_data: DataFrame, experiment_info: DataFrame
-) -> tuple[DataFrame, list[str]]:
-    """Simple method to add laughter episodess to the experiment info dataframe.
-    Will also perform some simple cleaning.
-
-    Parameters
-    ----------
-    laughter_info_data : DataFrame
-        dataframe with laughter data
-    experiment_info : DataFrame
-        dataframe with experiment info, i.e., informations regarding the
-        events performed
-
-    Returns
-    -------
-    DataFrame
-        returns a dataframe with all of the experiment info and the laughter info,
-        with a multiindex structure; and a list of the experiment events
-        grouping with the laughter as well
-    """
-    laughter_info_data.index = MultiIndex.from_tuples(
-        [tuple(idx.split("_")) for idx in laughter_info_data.index]
-    )
-    laughter_info_data = laughter_info_data.sort_index()
-    laughter_info_data["intensity"] = (
-        laughter_info_data["intensity"]
-        .apply(lambda x: INTENSITIES_MAPPING.get(x, nan))
-        .astype(float)
-    )
-
-    laughter_info_data = laughter_info_data[laughter_info_data["intensity"] > 0]
-    laughter_info_data[["start", "end"]] = laughter_info_data[["start", "end"]].apply(
-        to_datetime
-    )
-
-    sessions_groupings_w_laugh = deepcopy(SESSIONS_GROUPINGS)
-    sessions_groupings_w_laugh["laugther episodes"] = list(
-        laughter_info_data.index.get_level_values(1).unique()
-    )
-
-    # Join the laughter info with the experimento info
-    experimento_info_w_laugh = concat(
-        [laughter_info_data.iloc[:, :3], experiment_info], axis=0
-    ).sort_index()
-
-    sessions_groupings_w_laugh = deepcopy(SESSIONS_GROUPINGS)
-    sessions_groupings_w_laugh["laugther episodes"] = list(
-        laughter_info_data.index.get_level_values(1).unique()
-    )
-    return experimento_info_w_laugh, sessions_groupings_w_laugh
 
 
 def perform_cliff_delta(
