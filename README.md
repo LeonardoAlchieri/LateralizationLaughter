@@ -1,5 +1,5 @@
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
-[![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://github.com/LeonardoAlchieri/LateralizationLaughter/blob/main/LICENSE)
+[![PyPI license](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://github.com/LeonardoAlchieri/LateralizationLaughter/blob/main/LICENSE)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/LeonardoAlchieri/LateralizationLaughter/graphs/commit-activity)
 
 # LateralizationLaughter
