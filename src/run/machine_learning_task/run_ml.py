@@ -23,6 +23,7 @@ from numpy import isnan
 from sklearn.model_selection import LeaveOneGroupOut
 from numpy import sqrt
 from scipy.stats import ttest_ind_from_stats
+from tqdm import tqdm
 
 from affect_size.cliff_delta import cliff_delta
 
@@ -208,30 +209,52 @@ def train_cv_models(
     labels_list: ndarray,
     groups_list: ndarray,
 ):
-    cv = LeaveOneGroupOut()
     results = DataFrame()
 
-    for side, hand_crafted_features in zip(
-        ["left", "right", "random"],
-        [
-            hand_crafted_features_left,
-            hand_crafted_features_right,
-            hand_crafted_features_random,
-        ],
-    ):
-        hand_crafted_features[isnan(hand_crafted_features)] = 0
-        for ml_model in ml_models:
-            scores = cross_val_score(
-                estimator=ml_model,
-                X=hand_crafted_features,
-                y=labels_list,
-                groups=groups_list,
-                cv=cv,
-                n_jobs=-1,
-                error_score="raise",
-            )
+    for combination, hand_crafted_features_combination in zip(
+    [
+        "train left - test left",
+        "train right - test right",
+        "train random - test random",
+        "train left - test right",
+        "train right - test left",
+        "train random - test left",
+        "train random - test right",
+        "train left - test random",
+        "train right - test random",
+    ],
+    [
+        [hand_crafted_features_left, hand_crafted_features_left],
+        [hand_crafted_features_right, hand_crafted_features_right],
+        [hand_crafted_features_random, hand_crafted_features_random],
+        [hand_crafted_features_left, hand_crafted_features_right],
+        [hand_crafted_features_right, hand_crafted_features_left],
+        [hand_crafted_features_left, hand_crafted_features_random],
+        [hand_crafted_features_right, hand_crafted_features_random],
+        [hand_crafted_features_random, hand_crafted_features_left],
+        [hand_crafted_features_random, hand_crafted_features_right],
+    ],
+):
+        hand_crafted_features_train, hand_crafted_features_test = hand_crafted_features_combination
+        
+        
+        hand_crafted_features_train[isnan(hand_crafted_features_train)] = 0
+        hand_crafted_features_test[isnan(hand_crafted_features_test)] = 0
+    
+        for ml_model in tqdm(ml_models):
+            scores = list()
+            # NOTE: this is LOSO! Just our own implementation, where the test set, for
+            # the user left out, is from a different side
+            for user in set(groups_list):
+                train_data_mask: ndarray = groups_list != user
+                train_data: ndarray = hand_crafted_features_train[train_data_mask]
+                test_data_mark: ndarray = groups_list == user
+                test_data: ndarray = hand_crafted_features_test[test_data_mark]
+                
+                ml_model.fit(train_data, labels_list[train_data_mask])
+                scores.append(ml_model.score(test_data, labels_list[test_data_mark]))
 
-            results[f"{side}_{ml_model.__class__.__name__}"] = scores
+            results[f"{combination}_{ml_model.__class__.__name__}"] = scores
     return results
 
 
@@ -306,6 +329,7 @@ def aggregate_results(results: DataFrame, groups_list: ndarray) -> DataFrame:
     mean_res_clean = perform_test_over_results(
         mean_res_clean=mean_res_clean, groups_list=groups_list
     )
+    return mean_res_clean
 
 
 def calculate_cliff_delta(data: DataFrame, sides: list[str]):
@@ -321,6 +345,7 @@ def calculate_cliff_delta(data: DataFrame, sides: list[str]):
 def evaluate_effect_size(results: DataFrame, mean_res_clean: DataFrame) -> DataFrame:
     results.columns = MultiIndex.from_tuples([col.split("_") for col in results])
 
+    # FIXME: not working
     cliff_delta_results = dict()
     cliff_delta_results["cliff delta (lx vs rx)"] = calculate_cliff_delta(
         data=mean_res_clean, sides=["left", "right"]
@@ -403,13 +428,14 @@ def perform_ml(
             join_paths(path_to_save, f"ml_aggregated_results_{subset_name}.csv")
         )
 
-    cliff_delta_results = evaluate_effect_size(
-        results=results, mean_res_clean=mean_res_clean
-    )
-    if save_results:
-        cliff_delta_results.to_csv(
-            join_paths(path_to_save, f"ml_cliff_delta_results_{subset_name}.csv")
-        )
+    # TODO: add cliff delta for new paper. Not implemented in UBICOMP workshop
+    # cliff_delta_results = evaluate_effect_size(
+    #     results=results, mean_res_clean=mean_res_clean
+    # )
+    # if save_results:
+    #     cliff_delta_results.to_csv(
+    #         join_paths(path_to_save, f"ml_cliff_delta_results_{subset_name}.csv")
+    #     )
 
 
 def main(seed: int):
@@ -461,7 +487,8 @@ def main(seed: int):
         left_data_list=left_data_list, right_data_list=right_data_list
     )
 
-    ml_subset_names = ['all', 'EDA', 'BVP', 'ACC']
+    # ml_subset_names = ['all', 'EDA', 'BVP', 'ACC']
+    ml_subset_names = ['EDA']
     for name in ml_subset_names:
         logger.info(f'Starting ml task for for {name}')
         perform_ml(
@@ -471,7 +498,7 @@ def main(seed: int):
         labels_list=labels_list,
         groups_list=groups_list,
         seed=seed,
-        subset_name=ml_subset_names,
+        subset_name=name,
     )
 
 
