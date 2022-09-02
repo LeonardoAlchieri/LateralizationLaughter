@@ -212,35 +212,37 @@ def train_cv_models(
     results = DataFrame()
 
     for combination, hand_crafted_features_combination in zip(
-    [
-        "train left - test left",
-        "train right - test right",
-        "train random - test random",
-        "train left - test right",
-        "train right - test left",
-        "train random - test left",
-        "train random - test right",
-        "train left - test random",
-        "train right - test random",
-    ],
-    [
-        [hand_crafted_features_left, hand_crafted_features_left],
-        [hand_crafted_features_right, hand_crafted_features_right],
-        [hand_crafted_features_random, hand_crafted_features_random],
-        [hand_crafted_features_left, hand_crafted_features_right],
-        [hand_crafted_features_right, hand_crafted_features_left],
-        [hand_crafted_features_left, hand_crafted_features_random],
-        [hand_crafted_features_right, hand_crafted_features_random],
-        [hand_crafted_features_random, hand_crafted_features_left],
-        [hand_crafted_features_random, hand_crafted_features_right],
-    ],
-):
-        hand_crafted_features_train, hand_crafted_features_test = hand_crafted_features_combination
-        
-        
+        [
+            "train left - test left",
+            "train right - test right",
+            "train random - test random",
+            "train left - test right",
+            "train right - test left",
+            "train random - test left",
+            "train random - test right",
+            "train left - test random",
+            "train right - test random",
+        ],
+        [
+            [hand_crafted_features_left, hand_crafted_features_left],
+            [hand_crafted_features_right, hand_crafted_features_right],
+            [hand_crafted_features_random, hand_crafted_features_random],
+            [hand_crafted_features_left, hand_crafted_features_right],
+            [hand_crafted_features_right, hand_crafted_features_left],
+            [hand_crafted_features_left, hand_crafted_features_random],
+            [hand_crafted_features_right, hand_crafted_features_random],
+            [hand_crafted_features_random, hand_crafted_features_left],
+            [hand_crafted_features_random, hand_crafted_features_right],
+        ],
+    ):
+        (
+            hand_crafted_features_train,
+            hand_crafted_features_test,
+        ) = hand_crafted_features_combination
+
         hand_crafted_features_train[isnan(hand_crafted_features_train)] = 0
         hand_crafted_features_test[isnan(hand_crafted_features_test)] = 0
-    
+
         for ml_model in tqdm(ml_models):
             scores = list()
             # NOTE: this is LOSO! Just our own implementation, where the test set, for
@@ -250,7 +252,7 @@ def train_cv_models(
                 train_data: ndarray = hand_crafted_features_train[train_data_mask]
                 test_data_mark: ndarray = groups_list == user
                 test_data: ndarray = hand_crafted_features_test[test_data_mark]
-                
+
                 ml_model.fit(train_data, labels_list[train_data_mask])
                 scores.append(ml_model.score(test_data, labels_list[test_data_mark]))
 
@@ -460,10 +462,7 @@ def main(seed: int):
     )
     all_data: DataFrame = read_parquet(path_to_preprocessed_data)
 
-    (
-        experimento_info_w_laugh,
-        _,
-    ) = add_laughter_to_experiment_info(
+    (experimento_info_w_laugh, _,) = add_laughter_to_experiment_info(
         laughter_info_data=laughter_info_data, experiment_info=experiment_info
     )
 
@@ -488,18 +487,18 @@ def main(seed: int):
     )
 
     # ml_subset_names = ['all', 'EDA', 'BVP', 'ACC']
-    ml_subset_names = ['EDA']
+    ml_subset_names = ["EDA"]
     for name in ml_subset_names:
-        logger.info(f'Starting ml task for for {name}')
+        logger.info(f"Starting ml task for for {name}")
         perform_ml(
-        hand_crafted_features_left=hand_crafted_features_left,
-        hand_crafted_features_right=hand_crafted_features_right,
-        hand_crafted_features_random=hand_crafted_features_random,
-        labels_list=labels_list,
-        groups_list=groups_list,
-        seed=seed,
-        subset_name=name,
-    )
+            hand_crafted_features_left=hand_crafted_features_left,
+            hand_crafted_features_right=hand_crafted_features_right,
+            hand_crafted_features_random=hand_crafted_features_random,
+            labels_list=labels_list,
+            groups_list=groups_list,
+            seed=seed,
+            subset_name=name,
+        )
 
 
 if __name__ == "__main__":

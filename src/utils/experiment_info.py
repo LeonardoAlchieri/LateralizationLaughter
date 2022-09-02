@@ -2,7 +2,13 @@ from pandas import DataFrame, concat, to_datetime, MultiIndex
 from copy import deepcopy
 from numpy import nan
 
-from src.utils import slice_user_over_experiment_time, INTENSITIES_MAPPING, SESSIONS_GROUPINGS
+from src.utils import (
+    slice_user_over_experiment_time,
+    INTENSITIES_MAPPING,
+    SESSIONS_GROUPINGS,
+)
+
+
 def add_events_to_signal_data(
     signal_data: DataFrame,
     experiment_info: DataFrame,
@@ -114,4 +120,3 @@ def add_laughter_to_experiment_info(
         laughter_info_data.index.get_level_values(1).unique()
     )
     return experimento_info_w_laugh, sessions_groupings_w_laugh
-

@@ -19,7 +19,10 @@ from src.utils.correlation import calculate_statistical_test
 from src.utils.plots import statistical_test_plot, cliff_delta_plot
 from src.utils.feature_extraction import get_signal_feature_extraction, extract_features
 from src.utils.correlation import calculate_cliff_delta
-from src.utils.experiment_info import add_laughter_to_experiment_info, add_events_to_signal_data
+from src.utils.experiment_info import (
+    add_laughter_to_experiment_info,
+    add_events_to_signal_data,
+)
 
 # NOTE: fixed seed
 pandarallel.initialize(progress_bar=True)
