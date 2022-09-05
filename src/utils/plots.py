@@ -171,7 +171,7 @@ def cliff_delta_plot(
     path_to_save: str = "./visualizations/",
 ) -> None:
     cmap = cm.coolwarm
-    set(font_scale=1.8)
+    set(font_scale=2.89)
     figure(figsize=(13, 9))
     ax = heatmap(
         cliff_delta_bins,
@@ -183,13 +183,13 @@ def cliff_delta_plot(
         cmap=cmap,
         fmt="",
         cbar=False,
-        yticklabels=cliff_delta_results_vals.index,
+        yticklabels=cliff_delta_results_vals.index.str.replace("_", " "),
     )
     ax.tick_params(left=True, bottom=True)
     xticks(rotation=30, ha="right")
     xlabel("Feature")
     ylabel("Event")
-    title(f"Cliff Delta values ({signal_name})", fontsize=40)
+    title(f"Cliff Delta values ({signal_name.replace('_filt', '').replace('_', ' ')})", fontsize=40)
 
     def make_custom_handles(bins: DataFrame, cmap) -> list[Patch]:
         labels: list[Patch] = list()
@@ -241,10 +241,28 @@ def cliff_delta_plot(
     custom_handles = make_custom_handles(bins=cliff_delta_bins, cmap=cmap)
     legend(
         handles=custom_handles,
-        bbox_to_anchor=(1.4, 1.05),
+        bbox_to_anchor=(1.75, 1.05),
         title="Cliff Delta effect (dominant side)",
     )
     savefig(
         join_paths(path_to_save, f"cliff_delta_{signal_name}.pdf"),
+        bbox_inches="tight",
+    )
+
+
+def correlation_heatmap_plot(data: DataFrame, signal_name: str, path_to_save: str = './visualizations/') -> None:
+    set(font_scale=1.6)
+    figure(figsize=(7, 5))
+    ax = heatmap(data, 
+            xticklabels=data.columns,
+            vmax=1, vmin=-1, center=0,
+            cmap='coolwarm',
+            yticklabels=data.index.str.replace("_", " "), 
+            annot=True)
+    ax.tick_params(left=True, bottom=True)
+    ax.set_ylabel('Event')
+    title(f"Correlation coefficient per event ({signal_name.replace('_filt', '').replace('_', ' ')})", fontsize=20)
+    savefig(
+        join_paths(path_to_save, f"correlation_heatmap_{signal_name}.pdf"),
         bbox_inches="tight",
     )

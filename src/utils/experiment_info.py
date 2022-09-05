@@ -106,7 +106,7 @@ def add_laughter_to_experiment_info(
     )
 
     sessions_groupings_w_laugh = deepcopy(SESSIONS_GROUPINGS)
-    sessions_groupings_w_laugh["laugther episodes"] = list(
+    sessions_groupings_w_laugh["laughter_episodes"] = list(
         laughter_info_data.index.get_level_values(1).unique()
     )
 
@@ -115,8 +115,4 @@ def add_laughter_to_experiment_info(
         [laughter_info_data.iloc[:, :3], experiment_info], axis=0
     ).sort_index()
 
-    sessions_groupings_w_laugh = deepcopy(SESSIONS_GROUPINGS)
-    sessions_groupings_w_laugh["laugther episodes"] = list(
-        laughter_info_data.index.get_level_values(1).unique()
-    )
     return experimento_info_w_laugh, sessions_groupings_w_laugh

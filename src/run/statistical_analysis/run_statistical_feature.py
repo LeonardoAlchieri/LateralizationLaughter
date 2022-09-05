@@ -183,7 +183,7 @@ def main(seed: int = 0):
         if drop_nan_feature:
             logger.info("Dropping nan features")
             signal_features = signal_features.dropna(how="any", inplace=False)
-
+        
         perform_statistical_test(
             signal_features=signal_features, signal_name=signal_to_analyse
         )
